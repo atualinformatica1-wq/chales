@@ -1,0 +1,194 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-foreground: var(--whatsapp-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --shadow-soft: 0 1px 2px rgba(22, 35, 22, 0.06), 0 8px 24px rgba(22, 35, 22, 0.08);
+  --shadow-lift: 0 2px 4px rgba(22, 35, 22, 0.08), 0 18px 40px rgba(22, 35, 22, 0.14);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --background: rgb(253, 250, 241);
+  --foreground: rgb(25, 40, 27);
+  --card: rgb(255, 255, 252);
+  --card-foreground: rgb(25, 40, 27);
+  --popover: rgb(255, 255, 252);
+  --popover-foreground: rgb(25, 40, 27);
+
+  --primary: rgb(44, 88, 57);
+  --primary-foreground: rgb(251, 249, 237);
+
+  --secondary: rgb(241, 231, 211);
+  --secondary-foreground: rgb(43, 49, 25);
+
+  --muted: rgb(243, 238, 225);
+  --muted-foreground: rgb(92, 99, 85);
+
+  --accent: rgb(200, 109, 59);
+  --accent-foreground: rgb(254, 252, 244);
+
+  --destructive: rgb(201, 48, 45);
+  --destructive-foreground: rgb(250, 248, 241);
+
+  --success: rgb(49, 132, 84);
+  --success-foreground: rgb(250, 248, 241);
+
+  --warning: rgb(222, 161, 67);
+  --warning-foreground: rgb(42, 35, 19);
+
+  --whatsapp: rgb(50, 161, 85);
+  --whatsapp-foreground: rgb(254, 252, 244);
+
+  --border: rgb(224, 218, 204);
+  --input: rgb(224, 218, 204);
+  --ring: rgb(44, 88, 57);
+
+  --chart-1: rgb(44, 88, 57);
+  --chart-2: rgb(200, 109, 59);
+  --chart-3: rgb(222, 161, 67);
+  --chart-4: rgb(49, 132, 84);
+  --chart-5: rgb(92, 99, 85);
+
+  --sidebar: rgb(249, 245, 233);
+  --sidebar-foreground: rgb(25, 40, 27);
+  --sidebar-primary: rgb(44, 88, 57);
+  --sidebar-primary-foreground: rgb(251, 249, 237);
+  --sidebar-accent: rgb(241, 231, 211);
+  --sidebar-accent-foreground: rgb(43, 49, 25);
+  --sidebar-border: rgb(224, 218, 204);
+  --sidebar-ring: rgb(44, 88, 57);
+}
+
+.dark {
+  --background: rgb(12, 23, 14);
+  --foreground: rgb(242, 238, 228);
+  --card: rgb(20, 32, 22);
+  --card-foreground: rgb(242, 238, 228);
+  --popover: rgb(20, 32, 22);
+  --popover-foreground: rgb(242, 238, 228);
+  --primary: rgb(117, 182, 131);
+  --primary-foreground: rgb(12, 23, 14);
+  --secondary: rgb(41, 45, 30);
+  --secondary-foreground: rgb(242, 238, 228);
+  --muted: rgb(32, 41, 30);
+  --muted-foreground: rgb(165, 166, 152);
+  --accent: rgb(215, 126, 73);
+  --accent-foreground: rgb(24, 15, 9);
+  --destructive: rgb(232, 89, 79);
+  --destructive-foreground: rgb(250, 248, 241);
+  --success: rgb(83, 174, 119);
+  --success-foreground: rgb(11, 20, 13);
+  --warning: rgb(235, 179, 83);
+  --warning-foreground: rgb(27, 21, 11);
+  --whatsapp: rgb(84, 182, 110);
+  --whatsapp-foreground: rgb(11, 20, 13);
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: rgb(117, 182, 131);
+  --chart-1: rgb(117, 182, 131);
+  --chart-2: rgb(215, 126, 73);
+  --chart-3: rgb(235, 179, 83);
+  --chart-4: rgb(83, 174, 119);
+  --chart-5: rgb(165, 166, 152);
+  --sidebar: rgb(20, 32, 22);
+  --sidebar-foreground: rgb(242, 238, 228);
+  --sidebar-primary: rgb(117, 182, 131);
+  --sidebar-primary-foreground: rgb(12, 23, 14);
+  --sidebar-accent: rgb(41, 45, 30);
+  --sidebar-accent-foreground: rgb(242, 238, 228);
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: rgb(117, 182, 131);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+}
+
+@utility surface-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility hero-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(7, 21, 10, 0.88) 0%,
+    rgba(7, 21, 10, 0.45) 45%,
+    rgba(7, 21, 10, 0.2) 100%
+  );
+}

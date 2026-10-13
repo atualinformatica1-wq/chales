@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790602190214,
+      "tag": "0000_create_chales_booking_system",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790602210412,
+      "tag": "0001_add_claim_admin_function",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790775762338,
+      "tag": "0002_chalet_rented_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790947752262,
+      "tag": "0003_create_chalet_reviews",
+      "breakpoints": true
+    }
+  ]
+}
