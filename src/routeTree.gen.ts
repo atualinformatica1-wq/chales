@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AtividadeFisicaRouteImport } from './routes/atividade-fisica'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvaliacoesRouteImport } from './routes/avaliacoes'
+import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as FaleConoscoRouteImport } from './routes/fale-conosco'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ChaleIdRouteImport } from './routes/chale.$id'
@@ -26,6 +28,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtividadeFisicaRoute = AtividadeFisicaRouteImport.update({
+  id: '/atividade-fisica',
+  path: '/atividade-fisica',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -34,6 +41,11 @@ const AuthRoute = AuthRouteImport.update({
 const AvaliacoesRoute = AvaliacoesRouteImport.update({
   id: '/avaliacoes',
   path: '/avaliacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaleConoscoRoute = FaleConoscoRouteImport.update({
@@ -54,16 +66,20 @@ const ChaleIdRoute = ChaleIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/atividade-fisica': typeof AtividadeFisicaRoute
   '/auth': typeof AuthRoute
   '/avaliacoes': typeof AvaliacoesRoute
+  '/eventos': typeof EventosRoute
   '/fale-conosco': typeof FaleConoscoRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/chale/$id': typeof ChaleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/atividade-fisica': typeof AtividadeFisicaRoute
   '/auth': typeof AuthRoute
   '/avaliacoes': typeof AvaliacoesRoute
+  '/eventos': typeof EventosRoute
   '/fale-conosco': typeof FaleConoscoRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/chale/$id': typeof ChaleIdRoute
@@ -72,8 +88,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/atividade-fisica': typeof AtividadeFisicaRoute
   '/auth': typeof AuthRoute
   '/avaliacoes': typeof AvaliacoesRoute
+  '/eventos': typeof EventosRoute
   '/fale-conosco': typeof FaleConoscoRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/chale/$id': typeof ChaleIdRoute
@@ -81,15 +99,32 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/avaliacoes' | '/fale-conosco' | '/admin' | '/chale/$id'
+    | '/'
+    | '/atividade-fisica'
+    | '/auth'
+    | '/avaliacoes'
+    | '/eventos'
+    | '/fale-conosco'
+    | '/admin'
+    | '/chale/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/avaliacoes' | '/fale-conosco' | '/admin' | '/chale/$id'
+  to:
+    | '/'
+    | '/atividade-fisica'
+    | '/auth'
+    | '/avaliacoes'
+    | '/eventos'
+    | '/fale-conosco'
+    | '/admin'
+    | '/chale/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/atividade-fisica'
     | '/auth'
     | '/avaliacoes'
+    | '/eventos'
     | '/fale-conosco'
     | '/_authenticated/admin'
     | '/chale/$id'
@@ -98,8 +133,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AtividadeFisicaRoute: typeof AtividadeFisicaRoute
   AuthRoute: typeof AuthRoute
   AvaliacoesRoute: typeof AvaliacoesRoute
+  EventosRoute: typeof EventosRoute
   FaleConoscoRoute: typeof FaleConoscoRoute
   ChaleIdRoute: typeof ChaleIdRoute
 }
@@ -120,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atividade-fisica': {
+      id: '/atividade-fisica'
+      path: '/atividade-fisica'
+      fullPath: '/atividade-fisica'
+      preLoaderRoute: typeof AtividadeFisicaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -132,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/avaliacoes'
       fullPath: '/avaliacoes'
       preLoaderRoute: typeof AvaliacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fale-conosco': {
@@ -172,8 +223,10 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AtividadeFisicaRoute: AtividadeFisicaRoute,
   AuthRoute: AuthRoute,
   AvaliacoesRoute: AvaliacoesRoute,
+  EventosRoute: EventosRoute,
   FaleConoscoRoute: FaleConoscoRoute,
   ChaleIdRoute: ChaleIdRoute,
 }

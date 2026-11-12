@@ -10,16 +10,71 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          active: boolean
+          banner_in_carousel: boolean
+          banner_path: string
+          created_at: string
+          description: string
+          end_date: string | null
+          end_time: string | null
+          id: string
+          schedule_mode: string
+          start_date: string | null
+          start_time: string | null
+          title: string
+          video_in_carousel: boolean
+          video_path: string
+          weekdays: number[]
+        }
+        Insert: {
+          active?: boolean
+          banner_in_carousel?: boolean
+          banner_path?: string
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          schedule_mode?: string
+          start_date?: string | null
+          start_time?: string | null
+          title: string
+          video_in_carousel?: boolean
+          video_path?: string
+          weekdays?: number[]
+        }
+        Update: {
+          active?: boolean
+          banner_in_carousel?: boolean
+          banner_path?: string
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          schedule_mode?: string
+          start_date?: string | null
+          start_time?: string | null
+          title?: string
+          video_in_carousel?: boolean
+          video_path?: string
+          weekdays?: number[]
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string
           booking_time: string
           cancelled_at: string | null
           chalet_id: string
+          checkout_time: string | null
           confirmed_at: string | null
           created_at: string
           customer_email: string
@@ -38,6 +93,7 @@ export type Database = {
           booking_time: string
           cancelled_at?: string | null
           chalet_id: string
+          checkout_time?: string | null
           confirmed_at?: string | null
           created_at?: string
           customer_email: string
@@ -56,6 +112,7 @@ export type Database = {
           booking_time?: string
           cancelled_at?: string | null
           chalet_id?: string
+          checkout_time?: string | null
           confirmed_at?: string | null
           created_at?: string
           customer_email?: string
@@ -189,6 +246,84 @@ export type Database = {
           tagline?: string
           updated_at?: string
           whatsapp?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          active: boolean
+          banner_in_carousel: boolean
+          banner_path: string
+          created_at: string
+          description: string
+          end_date: string | null
+          end_time: string | null
+          id: string
+          start_date: string
+          start_time: string | null
+          title: string
+          video_in_carousel: boolean
+          video_path: string
+        }
+        Insert: {
+          active?: boolean
+          banner_in_carousel?: boolean
+          banner_path?: string
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          start_date: string
+          start_time?: string | null
+          title: string
+          video_in_carousel?: boolean
+          video_path?: string
+        }
+        Update: {
+          active?: boolean
+          banner_in_carousel?: boolean
+          banner_path?: string
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          start_date?: string
+          start_time?: string | null
+          title?: string
+          video_in_carousel?: boolean
+          video_path?: string
+        }
+        Relationships: []
+      }
+      faq_entries: {
+        Row: {
+          active: boolean
+          answer: string
+          created_at: string
+          id: string
+          keywords: string
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          answer: string
+          created_at?: string
+          id?: string
+          keywords?: string
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          answer?: string
+          created_at?: string
+          id?: string
+          keywords?: string
+          question?: string
+          sort_order?: number
         }
         Relationships: []
       }

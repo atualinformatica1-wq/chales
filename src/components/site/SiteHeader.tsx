@@ -26,6 +26,12 @@ export function SiteHeader() {
             <a href="/#chales">Chalés</a>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link to="/eventos">Eventos</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link to="/atividade-fisica">Atividade física</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link to="/fale-conosco">Fale conosco</Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
@@ -54,6 +60,8 @@ export function SiteHeader() {
       {menuOpen && <nav className="flex flex-col border-t border-border bg-background px-4 py-2 sm:hidden" aria-label="Menu principal">
         <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><Link to="/">Início</Link></Button>
         <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><a href="/#chales">Chalés</a></Button>
+        <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><Link to="/eventos">Eventos</Link></Button>
+        <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><Link to="/atividade-fisica">Atividade física</Link></Button>
         <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><Link to="/fale-conosco">Fale conosco</Link></Button>
         <Button asChild variant="ghost" className="justify-start" onClick={() => setMenuOpen(false)}><Link to="/avaliacoes">Avaliações</Link></Button>
       </nav>}

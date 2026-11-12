@@ -1,4 +1,3 @@
-```tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -100,7 +99,7 @@ export const Route = createRootRouteWithContext<{
       { rel: "stylesheet", href: appCss },
       {
         rel: "icon",
-        href: "/favicon.svg",
+        href: "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ctext y=%2750%27 font-size=%2750%27%3E🏡%3C/text%3E%3C/svg%3E",
         type: "image/svg+xml",
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -157,4 +156,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-```

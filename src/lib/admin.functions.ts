@@ -17,7 +17,30 @@ export const claimAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error("Não foi possível verificar o acesso.");
     return { isAdmin: Boolean(data) };
   });
+export const setBookingTimes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+      checkoutTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
 
+    const { error } = await context.supabase
+      .from("bookings")
+      .update({
+        booking_time: data.time,
+        checkout_time: data.checkoutTime,
+      })
+      .eq("id", data.id);
+
+    if (error) throw new Error("Não foi possível atualizar os horários.");
+
+    return { ok: true };
+  });
 export const listBookings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

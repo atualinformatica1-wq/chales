@@ -15,6 +15,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { chaletsQuery, companyQuery, formatBRL, rentedQuery, whatsappLink, type Chalet } from "@/lib/site";
+import { eventsQuery, eventRangeLabel } from "@/lib/events";
+import { activitiesQuery, activityScheduleLabel } from "@/lib/activities";
 import { RentedBadge } from "@/components/site/RentedBadge";
 
 export const Route = createFileRoute("/")({
@@ -42,6 +44,18 @@ function Index() {
   const { data: chalets = [], isLoading } = useQuery(chaletsQuery);
   const { data: company } = useQuery(companyQuery);
   const { data: rented = [] } = useQuery(rentedQuery);
+  const { data: events = [] } = useQuery(eventsQuery);
+  const { data: activities = [] } = useQuery(activitiesQuery);
+  const eventSlides = [
+    ...events.map((ev) => ({ ...ev, label: eventRangeLabel(ev), activity: false })),
+    ...activities.map((a) => ({ ...a, label: activityScheduleLabel(a), activity: true })),
+  ].flatMap((ev) => {
+    const date = ev.label;
+    const out: { key: string; type: "banner" | "video"; url: string; title: string; date: string; activity: boolean }[] = [];
+    if (ev.banner_in_carousel && ev.bannerUrl) out.push({ key: ev.id + "b", type: "banner", url: ev.bannerUrl, title: ev.title, date, activity: ev.activity });
+    if (ev.video_in_carousel && ev.videoUrl) out.push({ key: ev.id + "v", type: "video", url: ev.videoUrl, title: ev.title, date, activity: ev.activity });
+    return out;
+  });
   const [selected, setSelected] = useState<Chalet | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -98,6 +112,28 @@ function Index() {
                       </div>
                     ) : null}
                   </div>
+                </div>
+              </CarouselItem>
+            ))}
+            {eventSlides.map((s) => (
+              <CarouselItem key={s.key}>
+                <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden bg-foreground">
+                  {s.type === "video" ? (
+                    <video src={s.url} autoPlay muted loop playsInline controls className="size-full object-contain" />
+                  ) : (
+                    <img src={s.url} alt={s.title} loading="lazy" className="size-full object-cover" />
+                  )}
+                  {s.type === "banner" ? <div className="hero-overlay pointer-events-none absolute inset-0" /> : null}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto max-w-6xl px-4 pt-6">
+                    <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold tracking-widest text-accent-foreground uppercase">{s.activity ? "Atividade física" : "Evento"}</span>
+                  </div>
+                  {s.type === "banner" ? (
+                    <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-4 pb-12">
+                      <p className="text-sm tracking-widest text-primary-foreground/80 uppercase">{s.date}</p>
+                      <h2 className="mt-2 font-display text-4xl font-semibold text-primary-foreground sm:text-6xl">{s.title}</h2>
+                       <Button asChild size="lg" className="mt-4"><Link to={s.activity ? "/atividade-fisica" : "/eventos"}>{s.activity ? "Ver atividades" : "Ver eventos"}</Link></Button>
+                    </div>
+                  ) : null}
                 </div>
               </CarouselItem>
             ))}

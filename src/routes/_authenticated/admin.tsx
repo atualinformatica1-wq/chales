@@ -1,6 +1,6 @@
-
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LogOut, MessageCircle, Plus, Trash2 } from "lucide-react";
@@ -12,6 +12,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  claimAdmin,
+  deleteBooking,
+  deleteChalet,
+  listBookings,
+  saveChalet,
+  saveCompany,
+  setBookingStatus,
+  setBookingTimes,
+} from "@/lib/admin.functions";
+import { checkoutDate } from "@/lib/booking-times";
+import { EventsTab } from "@/components/admin/EventsTab";
+import { ActivitiesTab } from "@/components/admin/ActivitiesTab";
 import {
   allChaletsQuery,
   companyQuery,
@@ -40,26 +53,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const { data: access, isLoading } = useQuery({
-    queryKey: ["admin-access"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data } = await supabase.rpc("has_role", {
-          _user_id: session.user.id,
-          _role: "admin",
-        });
-        if (data) return { isAdmin: true };
-      }
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("role", "admin")
-        .limit(1);
-      return { isAdmin: (roles && roles.length > 0) };
-    },
-  });
+  const claimFn = useServerFn(claimAdmin);
+  const { data: access, isLoading } = useQuery({ queryKey: ["admin-access"], queryFn: () => claimFn() });
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -90,11 +85,17 @@ function AdminPage() {
               <TabsTrigger value="chales">Chalés</TabsTrigger>
               <TabsTrigger value="empresa">Empresa</TabsTrigger>
               <TabsTrigger value="avaliacoes">Avaliações</TabsTrigger>
+              <TabsTrigger value="robo">Robô</TabsTrigger>
+              <TabsTrigger value="eventos">Eventos</TabsTrigger>
+              <TabsTrigger value="atividades">Atividade física</TabsTrigger>
             </TabsList>
             <TabsContent value="reservas"><BookingsTab /></TabsContent>
             <TabsContent value="chales"><ChaletsTab /></TabsContent>
             <TabsContent value="empresa"><CompanyTab /></TabsContent>
             <TabsContent value="avaliacoes"><ReviewsTab /></TabsContent>
+            <TabsContent value="robo"><FaqTab /></TabsContent>
+            <TabsContent value="eventos"><EventsTab /></TabsContent>
+            <TabsContent value="atividades"><ActivitiesTab /></TabsContent>
           </Tabs>
         )}
       </main>
@@ -110,35 +111,20 @@ const statusStyle: Record<string, string> = {
 };
 
 function BookingsTab() {
+  const listFn = useServerFn(listBookings);
+  const statusFn = useServerFn(setBookingStatus);
+  const deleteFn = useServerFn(deleteBooking);
+  const timesFn = useServerFn(setBookingTimes);
+  const [editingTimes, setEditingTimes] = useState<{ id: string; time: string; checkoutTime: string } | null>(null);
+  const [savingTimes, setSavingTimes] = useState(false);
   const [filter, setFilter] = useState("todos");
-  const { data = [], refetch } = useQuery({
-    queryKey: ["bookings"],
-    queryFn: async () => {
-      await supabase.rpc("expire_pending_bookings");
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*, chalets(name)")
-        .order("created_at", { ascending: false })
-        .limit(300);
-      if (error) throw error;
-      return data ?? [];
-    },
-    refetchInterval: 60000,
-  });
+  const { data = [], refetch } = useQuery({ queryKey: ["bookings"], queryFn: () => listFn(), refetchInterval: 60000 });
 
   const rows = (data as any[]).filter((b) => filter === "todos" || b.status === filter);
 
   async function change(b: any, status: "confirmado" | "cancelado" | "pendente" | "finalizado") {
     try {
-      const patch: any = { status };
-      if (status === "confirmado") patch["confirmed_at"] = new Date().toISOString();
-      if (status === "cancelado") patch["cancelled_at"] = new Date().toISOString();
-      if (status === "pendente") {
-        patch["expires_at"] = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-        patch["cancelled_at"] = null;
-      }
-      const { error: updateError } = await supabase.from("bookings").update(patch).eq("id", b.id);
-      if (updateError) throw updateError;
+      await statusFn({ data: { id: b.id, status } });
       toast.success(status === "finalizado" ? "Chalé liberado" : "Reserva atualizada");
       refetch();
     } catch (e) {
@@ -147,7 +133,7 @@ function BookingsTab() {
   }
 
   function notify(b: any) {
-    const base = `Olá ${b.customer_name}! Reserva ${b.payment_reference} - ${b.chalets?.name ?? ""} em ${formatDateBR(b.booking_date)} às ${String(b.booking_time).slice(0, 5)}.`;
+    const base = `Olá ${b.customer_name}! Reserva ${b.payment_reference} - ${b.chalets?.name ?? ""}. Entrada: ${formatDateBR(b.booking_date)} às ${String(b.booking_time).slice(0, 5)}. Saída: ${formatDateBR(checkoutDate(b.booking_date, b.nights))} ${b.checkout_time ? `às ${String(b.checkout_time).slice(0, 5)}` : "(horário a definir)"}.`;
     const msg =
       b.status === "confirmado"
         ? `${base} Pagamento recebido, sua reserva está CONFIRMADA. Até breve!`
@@ -180,8 +166,10 @@ function BookingsTab() {
                 <span className="text-xs text-muted-foreground">{b.payment_reference}</span>
               </div>
               <p>
-                {formatDateBR(b.booking_date)} às {String(b.booking_time).slice(0, 5)} · {b.nights} diária(s) · {formatBRL(Number(b.total_price))}
+                Entrada: {formatDateBR(b.booking_date)} às {String(b.booking_time).slice(0, 5)}
               </p>
+              <p>Saída: {formatDateBR(checkoutDate(b.booking_date, b.nights))} · {b.checkout_time ? String(b.checkout_time).slice(0, 5) : "Horário a definir"}</p>
+              <p>{b.nights} diária(s) · {formatBRL(Number(b.total_price))}</p>
               <p className="text-muted-foreground">
                 {b.customer_name} · {b.customer_phone} · {b.customer_email}
               </p>
@@ -189,8 +177,30 @@ function BookingsTab() {
                 <p className="text-xs text-muted-foreground">Expira às {new Date(b.expires_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
               ) : null}
               {b.notes ? <p className="text-xs italic text-muted-foreground">{b.notes}</p> : null}
+              {editingTimes && editingTimes.id === b.id && (
+                <form className="space-y-3 border-t border-border pt-3" onSubmit={async (event) => {
+                  event.preventDefault();
+                  if (!editingTimes) return;
+                  setSavingTimes(true);
+                  try {
+                    await timesFn({ data: editingTimes });
+                    await refetch();
+                    setEditingTimes(null);
+                    toast.success("Horários salvos");
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "Não foi possível salvar os horários.");
+                  } finally { setSavingTimes(false); }
+                }}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="min-w-0 space-y-1.5"><Label htmlFor={`arrival-${b.id}`}>Horário de entrada</Label><Input id={`arrival-${b.id}`} type="time" required value={editingTimes.time} onChange={(e) => { const time = e.target.value; setEditingTimes(current => current ? { ...current, time } : null); }} /></div>
+                    <div className="min-w-0 space-y-1.5"><Label htmlFor={`departure-${b.id}`}>Horário de saída</Label><Input id={`departure-${b.id}`} type="time" required value={editingTimes.checkoutTime} onChange={(e) => { const checkoutTime = e.target.value; setEditingTimes(current => current ? { ...current, checkoutTime } : null); }} /></div>
+                  </div>
+                  <div className="flex gap-2"><Button size="sm" type="submit" disabled={savingTimes}>{savingTimes ? "Salvando..." : "Salvar horários"}</Button><Button size="sm" type="button" variant="ghost" disabled={savingTimes} onClick={() => setEditingTimes(null)}>Cancelar</Button></div>
+                </form>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" disabled={savingTimes} onClick={() => setEditingTimes({ id: b.id, time: String(b.booking_time).slice(0, 5), checkoutTime: b.checkout_time ? String(b.checkout_time).slice(0, 5) : "" })}>Editar horários</Button>
               {b.status === "pendente" && <Button size="sm" onClick={() => change(b, "confirmado")}>Confirmar pagamento</Button>}
               {b.status === "confirmado" && <Button size="sm" variant="secondary" onClick={() => change(b, "finalizado")}>Liberar chalé (após uso)</Button>}
               {(b.status === "pendente" || b.status === "confirmado") && <Button size="sm" variant="outline" onClick={() => change(b, "cancelado")}>Cancelar</Button>}
@@ -202,7 +212,7 @@ function BookingsTab() {
                 variant="ghost"
                 onClick={async () => {
                   if (!confirm("Excluir esta reserva?")) return;
-                  await supabase.from("bookings").delete().eq("id", b.id);
+                  await deleteFn({ data: { id: b.id } });
                   refetch();
                 }}
               >
@@ -227,44 +237,17 @@ const emptyChalet: Omit<Chalet, "id"> & { id?: string } = {
   sort_order: 0,
 };
 
-function ImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
-  const [uploading, setUploading] = useState(false);
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const fileName = Date.now() + "-" + file.name.replace(/[^a-zA-Z0-9.-]/g, "");
-    const { error } = await supabase.storage.from("chales-images").upload(fileName, file);
-    if (error) { toast.error("Erro no upload: " + error.message); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from("chales-images").getPublicUrl(fileName);
-    onChange(urlData.publicUrl);
-    setUploading(false);
-    toast.success("Imagem enviada!");
-  }
-  return (
-    <div className="space-y-2">
-      {value && <img src={value} alt="Preview" className="h-24 rounded-lg object-cover" />}
-      <Input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
-      {uploading && <p className="text-sm text-muted-foreground">Enviando...</p>}
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Ou cole uma URL" />
-    </div>
-  );
-}
-
 function ChaletsTab() {
   const qc = useQueryClient();
+  const saveFn = useServerFn(saveChalet);
+  const delFn = useServerFn(deleteChalet);
   const { data: chalets = [] } = useQuery(allChaletsQuery);
   const [editing, setEditing] = useState<typeof emptyChalet | null>(null);
 
   async function save() {
     if (!editing) return;
     try {
-      const { id, ...fields } = editing;
-      const query = id
-        ? supabase.from("chalets").update(fields).eq("id", id)
-        : supabase.from("chalets").insert(fields);
-      const { error: saveErr } = await query;
-      if (saveErr) throw saveErr;
+      await saveFn({ data: editing });
       toast.success("Chalé salvo");
       setEditing(null);
       qc.invalidateQueries({ queryKey: ["chalets"] });
@@ -282,7 +265,7 @@ function ChaletsTab() {
           <Field label="Valor da diária (R$)"><Input type="number" value={editing.price} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} /></Field>
           <Field label="Capacidade (pessoas)"><Input type="number" value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: Number(e.target.value) })} /></Field>
           <Field label="WhatsApp do responsável (só números, ex: 5512999990000)"><Input value={editing.whatsapp} onChange={(e) => setEditing({ ...editing, whatsapp: e.target.value.replace(/\D/g, "") })} /></Field>
-          <Field label="Imagem do chalé"><ImageUpload value={editing.image_url} onChange={(url) => setEditing({ ...editing, image_url: url })} /></Field>
+          <Field label="Link da imagem"><Input value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} /></Field>
           <Field label="Ordem de exibição"><Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} /></Field>
           <div className="sm:col-span-2"><Field label="Descrição"><Textarea rows={4} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></Field></div>
           <label className="flex items-center gap-2 text-sm"><Switch checked={editing.active} onCheckedChange={(v) => setEditing({ ...editing, active: v })} /> Disponível no site</label>
@@ -303,7 +286,7 @@ function ChaletsTab() {
                 <Button size="sm" variant="outline" onClick={() => setEditing({ ...c })}>Editar</Button>
                 <Button size="sm" variant="ghost" onClick={async () => {
                   if (!confirm("Excluir este chalé e suas reservas?")) return;
-                  await supabase.from("chalets").delete().eq("id", c.id);
+                  await delFn({ data: { id: c.id } });
                   qc.invalidateQueries({ queryKey: ["chalets"] });
                 }}><Trash2 className="size-4" /></Button>
               </div>
@@ -317,6 +300,7 @@ function ChaletsTab() {
 
 function CompanyTab() {
   const qc = useQueryClient();
+  const saveFn = useServerFn(saveCompany);
   const { data } = useQuery(companyQuery);
   const [form, setForm] = useState<Company | null>(null);
   useEffect(() => { if (data) setForm(data); }, [data]);
@@ -336,12 +320,7 @@ function CompanyTab() {
       <div className="flex justify-end sm:col-span-2">
         <Button onClick={async () => {
           try {
-            const { id, ...fields } = form;
-            const { error: compErr } = await supabase
-              .from("company_settings")
-              .update({ ...fields, updated_at: new Date().toISOString() })
-              .eq("id", id);
-            if (compErr) throw compErr;
+            await saveFn({ data: form });
             toast.success("Dados salvos");
             qc.invalidateQueries({ queryKey: ["company"] });
           } catch { toast.error("Confira os campos."); }
@@ -387,3 +366,56 @@ function ReviewsTab() {
   </div>;
 }
 
+type FaqRow = { id?: string; question: string; answer: string; keywords: string; sort_order: number; active: boolean };
+
+function FaqTab() {
+  const qc = useQueryClient();
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["faq", "admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("faq_entries").select("*").order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const [editing, setEditing] = useState<FaqRow | null>(null);
+
+  async function save() {
+    if (!editing) return;
+    if (editing.question.trim().length < 2 || !editing.answer.trim()) { toast.error("Preencha pergunta e resposta."); return; }
+    const payload = { question: editing.question.trim(), answer: editing.answer.trim(), keywords: editing.keywords, sort_order: editing.sort_order, active: editing.active };
+    const { error } = editing.id
+      ? await supabase.from("faq_entries").update(payload).eq("id", editing.id)
+      : await supabase.from("faq_entries").insert(payload);
+    if (error) { toast.error("Não foi possível salvar."); return; }
+    toast.success("Pergunta salva");
+    setEditing(null);
+    qc.invalidateQueries({ queryKey: ["faq"] });
+  }
+  async function remove(id: string) {
+    if (!confirm("Excluir esta pergunta?")) return;
+    const { error } = await supabase.from("faq_entries").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível excluir."); return; }
+    qc.invalidateQueries({ queryKey: ["faq"] });
+  }
+
+  return <div className="mt-4 space-y-4">
+    <p className="text-sm text-muted-foreground">Essas perguntas aparecem no robô de atendimento do site. As palavras-chave ajudam o robô a entender o que o cliente digitou (separe por vírgula).</p>
+    <Button onClick={() => setEditing({ question: "", answer: "", keywords: "", sort_order: rows.length + 1, active: true })}><Plus className="size-4" /> Nova pergunta</Button>
+    {editing && <div className="surface-card space-y-3 p-4">
+      <Field label="Pergunta"><Input value={editing.question} maxLength={200} onChange={e => setEditing({ ...editing, question: e.target.value })} /></Field>
+      <Field label="Resposta do robô"><Textarea rows={4} value={editing.answer} maxLength={2000} onChange={e => setEditing({ ...editing, answer: e.target.value })} /></Field>
+      <Field label="Palavras-chave"><Input value={editing.keywords} placeholder="preço, valor, quanto custa" onChange={e => setEditing({ ...editing, keywords: e.target.value })} /></Field>
+      <div className="flex flex-wrap items-center gap-4">
+        <Field label="Ordem"><Input type="number" className="w-24" value={editing.sort_order} onChange={e => setEditing({ ...editing, sort_order: Number(e.target.value) || 0 })} /></Field>
+        <label className="flex items-center gap-2 text-sm"><Switch checked={editing.active} onCheckedChange={v => setEditing({ ...editing, active: v })} /> Ativa</label>
+      </div>
+      <div className="flex gap-2"><Button onClick={save}>Salvar</Button><Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button></div>
+    </div>}
+    {isLoading ? <p className="text-muted-foreground">Carregando...</p> : rows.map(r => <article key={r.id} className="surface-card space-y-2 p-4">
+      <div className="flex flex-wrap items-center gap-2"><strong>{r.question}</strong>{!r.active && <span className="text-xs text-muted-foreground">(inativa)</span>}</div>
+      <p className="whitespace-pre-wrap text-sm text-muted-foreground">{r.answer}</p>
+      <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setEditing(r)}>Editar</Button><Button size="sm" variant="outline" onClick={() => remove(r.id)}><Trash2 className="size-4" /></Button></div>
+    </article>)}
+  </div>;
+}
